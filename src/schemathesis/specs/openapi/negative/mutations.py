@@ -904,7 +904,7 @@ def negate_constraints(
     def is_mutation_candidate(k: str, v: Any) -> bool:
         if k == "required":
             return v != []
-        if k in ("example", "examples", BUNDLE_STORAGE_KEY):
+        if k in ("example", "examples", BUNDLE_STORAGE_KEY, "default", "title", "description", "deprecated"):
             return False
         if ctx.is_path_location and k == "minLength" and v == 1:
             # Negating `minLength: 1` produces empty paths that the transport drops anyway.
