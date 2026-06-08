@@ -315,13 +315,17 @@ def negative_schema(
                 positive_strategy = _candidate
     if positive_strategy is not None:
         body_schema: JsonSchemaObject = schema if isinstance(schema, dict) else {}
-        inner_mutated_strategy = mutated_strategy
         # Use the real-format validator here: `filter_values` artificially fails
         # custom formats, so a permissive sibling target (e.g. `minLength: 0`)
         # alongside a format-bearing field would let an unchanged-but-valid body
         # slip through as negative data.
         real_validator = get_real_validator(validator_cache_key)
-
+        def actually_valid(gv: GeneratedValue) -> bool:
+            gv_body = gv.value
+            body_for_validation = _strip_binary(gv_body) if contains_binary(gv_body) else gv_body
+            return real_validator.is_valid(body_for_validation)
+        inner_mutated_strategy = mutated_strategy.filter(lambda gv: not actually_valid(gv))
+                
         @st.composite  # type: ignore[untyped-decorator]
         def hybrid(draw: Any) -> GeneratedValue:
             random = draw(st.randoms())
